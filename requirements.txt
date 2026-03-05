@@ -1,0 +1,13 @@
+streamlit
+requests
+fastapi
+pydantic
+dotenv
+pandas
+Jinja2
+matplotlib
+seaborn
+scikit-learn
+xgboost
+uvicorn
+boto3==1.34.40
