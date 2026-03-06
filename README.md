@@ -47,7 +47,7 @@ churn-prediction-project/
 ### 1. Clone the repository and navigate to the directory
 
 ```bash
-git clone https://github.com/YourUsername/churn-prediction-project.git
+git clone https://github.com/Fenaz12/churn-preidction.git
 cd churn-prediction-project
 ```
 
@@ -164,5 +164,4 @@ While this project runs locally for demonstration, a production-grade deployment
 ---
 
 ## 🎥 Video Demonstration
-
-[Link to your 10–15 minute screen recording demonstrating dataset overview, training, API execution, Streamlit UI, and design decisions]
+https://drive.google.com/file/d/1U2YAHYbBpuiFXLH0oGqla4s7K8xBGaPy/view?usp=sharing
