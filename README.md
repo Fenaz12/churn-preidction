@@ -17,7 +17,7 @@ An end-to-end Machine Learning solution designed to predict customer churn for a
 ## 📂 Project Structure
 
 ```text
-churn-prediction-project/
+churn-prediction/
 │
 ├── api/
 │   ├── __init__.py
@@ -48,7 +48,7 @@ churn-prediction-project/
 
 ```bash
 git clone https://github.com/Fenaz12/churn-preidction.git
-cd churn-prediction-project
+cd churn-preidction
 ```
 
 ### 2. Create and activate a virtual environment
