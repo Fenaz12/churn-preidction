@@ -142,29 +142,24 @@ This translated to a significantly higher **net savings for the business** compa
 
 ## ☁️ Optimization, Scaling & Cloud Deployment Plan
 
-While this project runs locally for demonstration, a production-grade deployment would utilize the following AWS architecture to scale securely and efficiently.
+While this project runs locally for demonstration, a production-grade deployment would utilize standard cloud architecture principles to scale securely and efficiently:
 
 ### 1. Scaling to 100k+ Records (Serving Layer)
-
-- **Containerization:** The modular FastAPI application (`main.py` + `api/`) would be containerized using Docker.
-- **Hosting:** The Docker image would be deployed to **AWS ECS (Elastic Container Service)** using **AWS Fargate** for serverless compute.
-- **Load Balancing:** An **Application Load Balancer (ALB)** would distribute incoming JSON payloads across multiple API instances. As API traffic spikes, **ECS Auto-Scaling** would spin up additional containers dynamically.
+* **Containerization:** The FastAPI application would be packaged into a Docker container. This ensures the app runs exactly the same way in the cloud as it does on a local laptop.
+* **Horizontal Scaling:** The Docker container would be deployed to a managed cloud environment. We would place a **Load Balancer** in front of the application. As API traffic increases (e.g., processing 100k+ requests), the load balancer automatically spins up duplicate copies of the container to share the workload.
 
 ### 2. Model Retraining Strategy
-
-- **Storage:** The `train.py` script currently saves the serialized `.pkl` pipeline directly to **Amazon S3**.
-- **Automation:** An **AWS EventBridge** cron schedule would trigger an **AWS Step Function** on a weekly/monthly cadence. This function would pull fresh data from the warehouse, execute the training pipeline, and overwrite the model in S3.
-- **Zero-Downtime Updates:** The FastAPI application would be configured to poll S3 for object hash changes or receive an **SNS notification** to gracefully reload the `.pkl` file into memory without dropping active HTTP requests.
+* **Storage:** The `train.py` script currently saves the serialized `.pkl` pipeline directly to cloud object storage (Amazon S3).
+* **Automation:** A scheduled automated job (e.g., a Cron job running monthly) would pull fresh customer data from the data warehouse, execute the training pipeline, and overwrite the model in S3. 
+* **Seamless Updates:** The FastAPI application would be configured to periodically check the S3 bucket. If it detects a newer version of the `.pkl` file, it will gracefully reload the model into memory without dropping active API requests.
 
 ### 3. Monitoring & Logging
-
-- **Infrastructure Metrics:** **AWS CloudWatch** will track API latency, HTTP 5xx errors, and container CPU/Memory utilization.
-- **Data Drift Detection:** Incoming API payloads would be asynchronously logged to a separate S3 bucket via **Amazon Kinesis Firehose**. A daily batch script would compare the statistical distribution of these incoming live requests against our training dataset to detect **Data Drift** (e.g., alerting if the average `monthly_fee` suddenly deviates in the real world).
+* **Infrastructure Metrics:** Standard cloud monitoring tools would track API latency (speed), error rates (HTTP 500s), and server memory usage.
+* **Data Drift Detection:** Incoming API payloads from the real world would be logged to a database. A scheduled script would compare the statistical distribution of these incoming requests against our original training dataset. If real-world customer behavior starts shifting (e.g., if the average `monthly_fee` suddenly drops), the system alerts the data science team that it is time to retrain the model.
 
 ### 4. Cloud Cost Considerations
-
-- **S3 Storage:** Storing serialized `.pkl` files costs fractions of a cent (~$0.023 per GB/month).
-- **Compute (ECS Fargate):** By utilizing serverless containers that scale down during low traffic periods, compute costs remain directly proportional to API usage, avoiding the sunk costs of idle EC2 instances.
+* **Storage Costs:** Storing serialized `.pkl` files in object storage like S3 is highly cost-effective (fractions of a cent per month).
+* **Compute Costs:** By utilizing an "auto-scaling" or "serverless" compute architecture, the business only pays for server time when API traffic is high. During the night or low-traffic periods, the servers scale down, avoiding the wasted sunk costs of running servers 24/7.
 
 ---
 
