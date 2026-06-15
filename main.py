@@ -3,6 +3,7 @@ import boto3
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from api.endpoints.predict import router as predict_router
+from api.endpoints.agent_router import router as agent_router
 
 load_dotenv()
 MODEL_PATH = os.getenv("MODEL_PATH", "models/churn_model_pipeline.pkl")
@@ -23,4 +24,4 @@ if not os.path.exists(MODEL_PATH) and BUCKET_NAME:
 app = FastAPI(title="Customer Churn Prediction API", version="1.0.0")
 
 app.include_router(predict_router, prefix="", tags=["Predictions"])
-
+app.include_router(agent_router, prefix="/agent", tags=["Orchestration"])
