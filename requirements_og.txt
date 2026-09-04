@@ -6,4 +6,11 @@ xgboost
 dice-ml
 joblib
 pydantic
+pydantic-settings
 python-dotenv
+boto3
+requests
+streamlit
+langchain>=1.0
+langchain-openai
+langgraph>=1.0

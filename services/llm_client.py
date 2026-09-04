@@ -1,17 +1,15 @@
-from langchain_openai import ChatOpenAI
+from langchain_openrouter import ChatOpenRouter
+
 from core.config import settings
 
-def get_llm(temperature: float = 0.7) -> ChatOpenAI:
-    """
-    Returns a configured LangChain Chat model connected via OpenRouter.
-    """
-    return ChatOpenAI(
-        base_url=settings.openrouter_base_url,
-        api_key=settings.openrouter_api_key,
+
+def get_llm(temperature: float = 0.2) -> ChatOpenRouter:
+    return ChatOpenRouter(
         model=settings.agent_model,
+        api_key=settings.openrouter_api_key,
         temperature=temperature,
-        default_headers={
-            "HTTP-Referer": "https://your-churn-app.internal", 
-            "X-Title": "Churn Agent Orchestrator"
-        }
+        max_retries=2,
+        openrouter_provider={
+            "require_parameters": True,
+        },
     )
