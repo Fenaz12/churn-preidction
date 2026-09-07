@@ -161,6 +161,12 @@ While this project runs locally for demonstration, a production-grade deployment
 * **Storage Costs:** Storing serialized `.pkl` files in object storage like S3 is highly cost-effective (fractions of a cent per month).
 * **Compute Costs:** By utilizing an "auto-scaling" or "serverless" compute architecture, the business only pays for server time when API traffic is high. During the night or low-traffic periods, the servers scale down, avoiding the wasted sunk costs of running servers 24/7.
 
+## Future Plans
+* Integrate real world tools. Agent should have access to them
+* Add more agents (Find where I need it)
+* Use MCP (Don't know why but still gonna find out a problem and fix it using multi agents and MCP)
+* Create email and CSM tickets should work, dont just create drafts
+
 ---
 
 ## 🎥 Video Demonstration
