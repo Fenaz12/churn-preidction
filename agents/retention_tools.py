@@ -21,54 +21,37 @@ DEMO_DISCOUNT_LIMITS = {
 def _to_json(data: dict | list) -> str:
     return json.dumps(data, indent=2, default=str)
 
+# Get tool runtime and other details from tools
+def _stream(runtime: ToolRuntime, event: str, tool_name: str, message: str, data: dict | None = None) -> None:
+    runtime.stream_writer({
+        "event": event,
+        "tool": tool_name,
+        "message": message,
+        "data": data or {},
+    })
 
-def _stream(
-    runtime: ToolRuntime,
-    event: str,
-    tool_name: str,
-    message: str,
-    data: dict | None = None,
-) -> None:
-    runtime.stream_writer(
-        {
-            "event": event,
-            "tool": tool_name,
-            "message": message,
-            "data": data or {},
-        }
-    )
-
-
+# Get cases that are already completed so the agent don't have to run again
 def _load_case_actions(case_id: str) -> list[dict]:
     if not os.path.exists(ACTION_LOG_PATH):
         return []
 
     actions = []
-
     with open(ACTION_LOG_PATH, "r", encoding="utf-8") as file:
         for line in file:
             line = line.strip()
-
             if not line:
                 continue
-
             try:
                 record = json.loads(line)
             except json.JSONDecodeError:
                 continue
-
             if record.get("case_id") == case_id:
                 actions.append(record)
 
     return actions
 
-
-def _write_action(
-    case_id: str,
-    action_type: str,
-    status: str,
-    payload: dict,
-) -> dict:
+# Create an action record and store it.
+def _write_action(case_id: str, action_type: str, status: str, payload: dict) -> dict:
     os.makedirs(os.path.dirname(ACTION_LOG_PATH), exist_ok=True)
 
     record = {
@@ -87,10 +70,7 @@ def _write_action(
 
 
 @tool
-def get_customer_context(
-    decision_reason: str,
-    runtime: ToolRuntime,
-) -> str:
+def get_customer_context(decision_reason: str, runtime: ToolRuntime) -> str:
     """
     Inspect the customer's account, usage, support, and satisfaction data.
 
@@ -102,7 +82,7 @@ def get_customer_context(
         runtime,
         event="tool_running",
         tool_name="get_customer_context",
-        message="Loading customer information from LangGraph state.",
+        message="Loading customer information",
     )
 
     profile = runtime.state["customer_profile"]
@@ -131,10 +111,7 @@ def get_customer_context(
 
 
 @tool
-def get_churn_analysis(
-    decision_reason: str,
-    runtime: ToolRuntime,
-) -> str:
+def get_churn_analysis(decision_reason: str, runtime: ToolRuntime) -> str:
     """
     Inspect the XGBoost churn prediction and every DiCE counterfactual
     generated for the current customer.
@@ -176,10 +153,7 @@ def get_churn_analysis(
 
 
 @tool
-def get_case_actions(
-    decision_reason: str,
-    runtime: ToolRuntime,
-) -> str:
+def get_case_actions(decision_reason: str, runtime: ToolRuntime) -> str:
     """
     Check actions already created for this retention case.
 
@@ -210,10 +184,7 @@ def get_case_actions(
 
 @tool
 def evaluate_fee_offer(
-    target_monthly_fee: float,
-    duration_months: int,
-    decision_reason: str,
-    runtime: ToolRuntime,
+    target_monthly_fee: float, duration_months: int, decision_reason: str, runtime: ToolRuntime
 ) -> str:
     """
     Check whether a proposed fee reduction follows the demo retention
@@ -241,27 +212,14 @@ def evaluate_fee_offer(
     )
 
     if current_fee <= 0:
-        result = {
-            "eligible": False,
-            "reason": "Current monthly fee is invalid.",
-        }
-
+        result = {"eligible": False, "reason": "Current monthly fee is invalid."}
     elif target_monthly_fee <= 0:
-        result = {
-            "eligible": False,
-            "reason": "Target monthly fee must be positive.",
-        }
-
+        result = {"eligible": False, "reason": "Target monthly fee must be positive."}
     elif duration_months <= 0:
-        result = {
-            "eligible": False,
-            "reason": "Duration must be at least one month.",
-        }
-
+        result = {"eligible": False, "reason": "Duration must be at least one month."}
     else:
         discount_percentage = (current_fee - target_monthly_fee) / current_fee * 100
         estimated_cost = max(current_fee - target_monthly_fee, 0) * duration_months
-
         eligible = 0 < discount_percentage <= max_discount
 
         if target_monthly_fee >= current_fee:
@@ -295,79 +253,7 @@ def evaluate_fee_offer(
 
 
 @tool
-def check_contract_change(
-    target_contract: Literal["Monthly", "Quarterly", "Yearly"],
-    decision_reason: str,
-    runtime: ToolRuntime,
-) -> str:
-    """
-    Check whether a proposed contract transition is valid.
-
-    Use this before treating a contract-based counterfactual as
-    operationally feasible.
-    """
-
-    profile = runtime.state["customer_profile"]
-    current_contract = profile.get("contract_type")
-
-    _stream(
-        runtime,
-        event="tool_running",
-        tool_name="check_contract_change",
-        message="Checking proposed contract transition.",
-        data={
-            "current_contract": current_contract,
-            "target_contract": target_contract,
-        },
-    )
-
-    contract_rank = {
-        "Monthly": 1,
-        "Quarterly": 2,
-        "Yearly": 3,
-    }
-
-    if current_contract not in contract_rank:
-        result = {
-            "valid": False,
-            "reason": "Current contract type is unknown.",
-        }
-
-    elif target_contract == current_contract:
-        result = {
-            "valid": False,
-            "reason": "Customer is already on this contract.",
-        }
-
-    else:
-        result = {
-            "valid": True,
-            "current_contract": current_contract,
-            "target_contract": target_contract,
-            "increases_commitment": (
-                contract_rank[target_contract] > contract_rank[current_contract]
-            ),
-            "reason": "Contract transition is valid.",
-        }
-
-    _stream(
-        runtime,
-        event="tool_completed",
-        tool_name="check_contract_change",
-        message="Contract check completed.",
-        data=result,
-    )
-
-    return _to_json(result)
-
-
-@tool
-def save_email_draft(
-    subject: str,
-    body: str,
-    decision_reason: str,
-    runtime: ToolRuntime,
-) -> str:
+def save_email_draft(subject: str, body: str, decision_reason: str, runtime: ToolRuntime) -> str:
     """
     Prepare a customer retention email.
 
@@ -407,10 +293,7 @@ def save_email_draft(
         event="tool_completed",
         tool_name="save_email_draft",
         message="Email draft prepared.",
-        data={
-            "draft_id": record["id"],
-            "status": "prepared",
-        },
+        data={"draft_id": record["id"], "status": "prepared"},
     )
 
     return _to_json(result)
@@ -439,25 +322,15 @@ def create_csm_ticket(
         event="tool_running",
         tool_name="create_csm_ticket",
         message="Creating Customer Success ticket.",
-        data={
-            "priority": priority,
-            "summary": summary,
-        },
+        data={"priority": priority, "summary": summary},
     )
 
     existing_actions = _load_case_actions(case_id)
 
     for action in existing_actions:
-        same_ticket = (
-            action.get("action_type") == "csm_ticket"
-            and action.get("payload", {}).get("summary") == summary
-        )
-
+        same_ticket = action.get("action_type") == "csm_ticket" and action.get("payload", {}).get("summary") == summary
         if same_ticket:
-            result = {
-                "ticket_id": action["id"],
-                "status": "already_exists",
-            }
+            result = {"ticket_id": action["id"], "status": "already_exists"}
 
             _stream(
                 runtime,
@@ -481,10 +354,7 @@ def create_csm_ticket(
         },
     )
 
-    result = {
-        "ticket_id": record["id"],
-        "status": "created",
-    }
+    result = {"ticket_id": record["id"], "status": "created"}
 
     _stream(
         runtime,
@@ -502,7 +372,6 @@ RETENTION_TOOLS = [
     get_churn_analysis,
     get_case_actions,
     evaluate_fee_offer,
-    check_contract_change,
     save_email_draft,
     create_csm_ticket,
 ]

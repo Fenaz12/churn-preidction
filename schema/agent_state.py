@@ -1,6 +1,5 @@
-import operator
 from typing import Annotated, Any
-
+from langgraph.graph.message import add_messages
 from langchain.messages import AnyMessage
 from typing_extensions import TypedDict
 
@@ -10,7 +9,7 @@ from schema.retention_models import RetentionPlan
 class RetentionState(TypedDict, total=False):
     # Conversation history between the LLM and tools.
     # operator.add means new messages are appended instead of replacing old ones.
-    messages: Annotated[list[AnyMessage], operator.add]
+    messages: Annotated[list[AnyMessage], add_messages]
 
     # Unique retention case.
     case_id: str

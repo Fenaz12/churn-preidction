@@ -64,10 +64,7 @@ Required behaviour:
 5. If an option changes monthly_fee, use evaluate_fee_offer before
    treating that option as feasible.
 
-6. If an option changes contract_type, use check_contract_change before
-   treating that option as feasible.
-
-7. Some counterfactual features are outcomes or behavioural targets,
+6. Some counterfactual features are outcomes or behavioural targets,
    not directly editable business controls.
 
    Examples:
@@ -78,24 +75,24 @@ Required behaviour:
    Interpret these as signals about what the company should try to
    improve. Never pretend the company can directly edit those values.
 
-8. Create a CSM ticket when poor satisfaction, support problems,
+7. Create a CSM ticket when poor satisfaction, support problems,
    escalations, or account issues justify human intervention.
 
-9. Prepare a customer email only when communication is useful.
+8. Prepare a customer email only when communication is useful.
 
-10. Do not create an action merely because a tool exists.
+9. Do not create an action merely because a tool exists.
 
-11. Use get_case_actions when necessary to avoid duplicate actions.
+10. Use get_case_actions when necessary to avoid duplicate actions.
 
-12. save_email_draft creates a draft only. Never claim that an email
+11. save_email_draft creates a draft only. Never claim that an email
     was sent.
 
-13. Customer-facing actions require human approval.
+12. Customer-facing actions require human approval.
 
-14. DiCE counterfactuals are model-based explanations. They do not prove
+13. DiCE counterfactuals are model-based explanations. They do not prove
     that the proposed action will causally reduce churn.
 
-15. Never claim that retention is guaranteed.
+14. Never claim that retention is guaranteed.
 
 Once you have gathered enough information and do not require more tools,
 respond with a concise strategy summary.
@@ -151,7 +148,6 @@ TOOL_PURPOSES = {
     "get_churn_analysis": "Inspect churn risk and all DiCE alternatives.",
     "get_case_actions": "Check previously created retention actions.",
     "evaluate_fee_offer": "Validate a fee reduction against retention policy.",
-    "check_contract_change": "Validate a proposed contract transition.",
     "save_email_draft": "Prepare customer communication without sending it.",
     "create_csm_ticket": "Create an internal Customer Success follow-up.",
 }
@@ -330,13 +326,13 @@ def build_finalize_node(finalizer_model):
     return finalize_plan_node
 
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=1) # Graph is created once and then reused.
 def get_retention_graph():
     llm = get_llm(temperature=0.2)
 
     model_with_tools = llm.bind_tools(
         RETENTION_TOOLS,
-        strict=True,
+        strict=True, # Asks the model to follow the tools’ parameter schemas correctly.
     )
 
     finalizer_model = llm.with_structured_output(

@@ -27,7 +27,6 @@ class CounterfactualAssessment(BaseModel):
 class RetentionAction(BaseModel):
     action_type: Literal[
         "fee_offer",
-        "contract_change",
         "email_draft",
         "csm_ticket",
         "monitoring",

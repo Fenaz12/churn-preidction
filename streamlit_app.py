@@ -77,12 +77,7 @@ TOOL_UI = {
             "policy and estimates its cost."
         ),
     },
-    "check_contract_change": {
-        "name": "Validate Contract Change",
-        "purpose": (
-            "Checks whether a proposed contract transition is valid."
-        ),
-    },
+
     "save_email_draft": {
         "name": "Prepare Customer Email",
         "purpose": (
